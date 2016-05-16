@@ -7,21 +7,17 @@ import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx;
 import com.intellij.openapi.fileEditor.impl.EditorWindow;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.util.OpenSourceUtil;
 
 import javax.swing.*;
 
 /**
- * Opens file in assisteng view
+ * Abstract action class. Allows to open files in different windows. Like Assistant view in Xcode.
  */
-abstract class AbstractOpenInViewAction extends BaseNavigateToSourceAction {
+abstract class AbstractOpenInWindowAction extends BaseNavigateToSourceAction {
 
-
-    public AbstractOpenInViewAction() {
+    public AbstractOpenInWindowAction() {
         super(true);
-    }
-
-    protected AbstractOpenInViewAction(boolean b) {
-        super(b);
     }
 
     abstract int getViewIndex();
@@ -37,26 +33,22 @@ abstract class AbstractOpenInViewAction extends BaseNavigateToSourceAction {
             return;
         }
         FileEditorManagerEx fileEditorManager = FileEditorManagerEx.getInstanceEx(project);
-
         VirtualFile file = e.getData(CommonDataKeys.VIRTUAL_FILE);
         if (file == null) {
             return;
         }
-
         if (fileEditorManager.isInSplitter()) {
             fileEditorManager.getWindows()[getViewIndex()].setAsCurrentWindow(true);
             fileEditorManager.openFile(file, true);
-        } else {
-            EditorWindow editorWindow = e.getData(EditorWindow.DATA_KEY);
-            fileEditorManager.createSplitter(SwingConstants.VERTICAL, editorWindow);
-
-            VirtualFile currentFile = fileEditorManager.getCurrentFile();
-            if (currentFile == null) {
-                return;
-            }
-
-            fileEditorManager.openFile(file, true);
-//            fileEditorManager.getCurrentWindow().closeFile(currentFile);
+            return;
         }
+        EditorWindow editorWindow = e.getData(EditorWindow.DATA_KEY);
+        fileEditorManager.createSplitter(SwingConstants.VERTICAL, editorWindow);
+        VirtualFile currentFile = fileEditorManager.getCurrentFile();
+        if (currentFile == null) {
+            return;
+        }
+        fileEditorManager.openFile(file, true);
+        OpenSourceUtil.navigate();
     }
 }

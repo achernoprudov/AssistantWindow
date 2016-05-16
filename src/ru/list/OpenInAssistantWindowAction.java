@@ -3,7 +3,7 @@ package ru.list;
 /**
  * Opens file in assistant view (second window in splitter)
  */
-class OpenInAssistantViewAction extends AbstractOpenInViewAction {
+class OpenInAssistantWindowAction extends AbstractOpenInWindowAction {
 
     @Override
     int getViewIndex() {

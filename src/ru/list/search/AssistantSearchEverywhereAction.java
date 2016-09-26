@@ -16,7 +16,6 @@
 package ru.list.search;
 
 import com.intellij.codeInsight.lookup.LookupManager;
-import com.intellij.codeInsight.navigation.NavigationUtil;
 import com.intellij.execution.Executor;
 import com.intellij.execution.ExecutorRegistry;
 import com.intellij.execution.RunnerAndConfigurationSettings;
@@ -127,6 +126,7 @@ import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import ru.list.utils.AssistantUtils;
+import ru.list.utils.WindowIndex;
 
 import javax.accessibility.Accessible;
 import javax.accessibility.AccessibleContext;
@@ -302,7 +302,7 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
                     //noinspection SSBasedInspection
                     SwingUtilities.invokeLater(() -> {
                         myList.setSelectedIndex(i);
-                        doNavigate(i, false);
+                        doNavigate(i, WindowIndex.MAIN);
                     });
                 }
             }
@@ -465,7 +465,7 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
         return myPopupField;
     }
 
-    private void doNavigate(final int index, boolean isAssistant) {
+    private void doNavigate(final int index, final int windowIndex) {
         final DataManager dataManager = DataManager.getInstance();
         if (dataManager == null) return;
         final Project project = CommonDataKeys.PROJECT.getData(dataManager.getDataContext(getField().getTextEditor()));
@@ -518,14 +518,18 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
         AccessToken token = ApplicationManager.getApplication().acquireReadActionLock();
         try {
             if (value instanceof PsiElement) {
-                onDone = () -> NavigationUtil.activateFileWithPsiElement((PsiElement)value, true);
+                onDone = () -> {
+                    PsiElement psiElement = (PsiElement) value;
+                    FileEditorManagerEx fileEditorManager = FileEditorManagerEx.getInstanceEx(project);
+                    AssistantUtils.openPsiElement(windowIndex, psiElement, fileEditorManager, myEditorWindow);
+                };
                 return;
             }
             else if (isVirtualFile(value)) {
                 onDone = () -> {
-                    FileEditorManagerEx fileEditorManager = FileEditorManagerEx.getInstanceEx(project);
                     VirtualFile virtualFile = (VirtualFile) value;
-                    AssistantUtils.openFileInEditorGroup(!isAssistant, virtualFile, fileEditorManager, myEditorWindow);
+                    FileEditorManagerEx fileEditorManager = FileEditorManagerEx.getInstanceEx(project);
+                    AssistantUtils.openFileInEditorGroup(windowIndex, virtualFile, fileEditorManager, myEditorWindow);
                 };
                 return;
             }
@@ -556,7 +560,11 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
                 return;
             }
             else if (value instanceof Navigatable) {
-                onDone = () -> OpenSourceUtil.navigate(true, (Navigatable)value);
+                onDone = () -> {
+                    Navigatable navigatable = (Navigatable) value;
+                    FileEditorManagerEx fileEditorManager = FileEditorManagerEx.getInstanceEx(project);
+                    AssistantUtils.openNavigatable(windowIndex, navigatable, fileEditorManager, myEditorWindow);
+                };
                 return;
             }
         }
@@ -680,7 +688,7 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
                 g.fillRect(0, 0, getWidth(), getHeight());
             }
         };
-        final JLabel title = new JLabel(" Search Everywhere:       ");
+        final JLabel title = new JLabel(" Assistant Search Everywhere:       ");
         final JPanel topPanel = new NonOpaquePanel(new BorderLayout());
         title.setForeground(new JBColor(Gray._240, Gray._200));
         if (SystemInfo.isMac) {
@@ -708,7 +716,9 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
         topPanel.add(controls, BorderLayout.EAST);
         panel.add(myPopupField, BorderLayout.CENTER);
         panel.add(topPanel, BorderLayout.NORTH);
+        panel.add(new JLabel("Open in main group - (Enter);\t Open in second group - (Alt Enter)"), BorderLayout.SOUTH);
         panel.setBorder(IdeBorderFactory.createEmptyBorder(3, 5, 4, 5));
+
         DataManager.registerDataProvider(panel, this);
         final ComponentPopupBuilder builder = JBPopupFactory.getInstance().createComponentPopupBuilder(panel, editor);
         myBalloon = builder
@@ -938,7 +948,7 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
             public void actionPerformed(AnActionEvent e) {
                 final int index = myList.getSelectedIndex();
                 if (index != -1) {
-                    doNavigate(index, false);
+                    doNavigate(index, WindowIndex.MAIN);
                 }
             }
         }.registerCustomShortcutSet(CustomShortcutSet.fromString("ENTER", "shift ENTER"), editor, balloon);
@@ -971,7 +981,7 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
             public void actionPerformed(AnActionEvent e) {
                 final int index = myList.getSelectedIndex();
                 if (index != -1) {
-                    doNavigate(index, true);
+                    doNavigate(index, WindowIndex.ASSISTANT);
                 }
             }
         }.registerCustomShortcutSet(assistantShortcutSet, editor, balloon);

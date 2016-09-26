@@ -1,8 +1,11 @@
 package ru.list.utils;
 
+import com.intellij.codeInsight.navigation.NavigationUtil;
 import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx;
 import com.intellij.openapi.fileEditor.impl.EditorWindow;
 import com.intellij.openapi.vfs.VirtualFile;
+import com.intellij.pom.Navigatable;
+import com.intellij.psi.PsiElement;
 import com.intellij.util.OpenSourceUtil;
 
 import javax.swing.*;
@@ -12,19 +15,32 @@ import javax.swing.*;
  */
 public class AssistantUtils {
 
-    public static void openFileInEditorGroup(boolean inMainWindow, VirtualFile file, FileEditorManagerEx fileEditorManager, EditorWindow editorWindow) {
-        int viewIndex = inMainWindow ? 0 : 1;
-        if (fileEditorManager.isInSplitter()) {
-            fileEditorManager.getWindows()[viewIndex].setAsCurrentWindow(true);
-            fileEditorManager.openFile(file, true);
-            return;
-        }
-        fileEditorManager.createSplitter(SwingConstants.VERTICAL, editorWindow);
-        VirtualFile currentFile = fileEditorManager.getCurrentFile();
-        if (currentFile == null) {
-            return;
-        }
+    public static void openFileInEditorGroup(int windowIndex, VirtualFile file, FileEditorManagerEx fileEditorManager, EditorWindow editorWindow) {
+        splitWindowIfNeeded(windowIndex, fileEditorManager, editorWindow);
+        setCurrentWindow(windowIndex, fileEditorManager);
         fileEditorManager.openFile(file, true);
-        OpenSourceUtil.navigate();
+    }
+
+    public static void setCurrentWindow(int viewIndex, FileEditorManagerEx fileEditorManager) {
+        fileEditorManager.getWindows()[viewIndex].setAsCurrentWindow(true);
+    }
+
+    public static void splitWindowIfNeeded(int windowIndex, FileEditorManagerEx fileEditorManager, EditorWindow editorWindow) {
+        // split if file needs to be in Assistant Window and FileEditor is not Splitter
+        if (windowIndex == WindowIndex.ASSISTANT && !fileEditorManager.isInSplitter()) {
+            fileEditorManager.createSplitter(SwingConstants.VERTICAL, editorWindow);
+        }
+    }
+
+    public static void openPsiElement(int winowIndex, PsiElement psiElement, FileEditorManagerEx fileEditorManager, EditorWindow editorWindow) {
+        splitWindowIfNeeded(winowIndex, fileEditorManager, editorWindow);
+        setCurrentWindow(winowIndex, fileEditorManager);
+        NavigationUtil.activateFileWithPsiElement(psiElement);
+    }
+
+    public static void openNavigatable(int windowIndex, Navigatable navigatable, FileEditorManagerEx fileEditorManager, EditorWindow editorWindow) {
+        splitWindowIfNeeded(windowIndex, fileEditorManager, editorWindow);
+        setCurrentWindow(windowIndex, fileEditorManager);
+        OpenSourceUtil.navigate(true, navigatable);
     }
 }

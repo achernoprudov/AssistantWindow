@@ -8,6 +8,7 @@ import com.intellij.openapi.fileEditor.impl.EditorWindow;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.vfs.VirtualFile;
 import ru.list.utils.AssistantUtils;
+import ru.list.utils.WindowIndex;
 
 /**
  * Opens file in assistant view (second window in splitter)
@@ -34,6 +35,6 @@ class OpenInSecondGroupAction extends BaseNavigateToSourceAction {
         }
         EditorWindow editorWindow = e.getData(EditorWindow.DATA_KEY);
         FileEditorManagerEx fileEditorManager = FileEditorManagerEx.getInstanceEx(project);
-        AssistantUtils.openFileInEditorGroup(false, file, fileEditorManager, editorWindow);
+        AssistantUtils.openFileInEditorGroup(WindowIndex.ASSISTANT, file, fileEditorManager, editorWindow);
     }
 }

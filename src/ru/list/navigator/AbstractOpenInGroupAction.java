@@ -1,4 +1,4 @@
-package ru.list;
+package ru.list.navigator;
 
 import com.intellij.ide.actions.BaseNavigateToSourceAction;
 import com.intellij.openapi.actionSystem.AnActionEvent;
@@ -14,9 +14,9 @@ import javax.swing.*;
 /**
  * Abstract action class. Allows to open files in different windows. Like Assistant view in Xcode.
  */
-abstract class AbstractOpenInWindowAction extends BaseNavigateToSourceAction {
+abstract class AbstractOpenInGroupAction extends BaseNavigateToSourceAction {
 
-    public AbstractOpenInWindowAction() {
+    AbstractOpenInGroupAction() {
         super(true);
     }
 

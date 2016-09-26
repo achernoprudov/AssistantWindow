@@ -30,20 +30,25 @@
 
   <actions>
     <action id="OpenInAssistantView"
-            class="ru.list.OpenInAssistantWindowAction"
+            class="ru.list.navigator.OpenInSecondGroupAction"
             text="Open in Assistant Window"
             description="Open File in Assistant Window">
       <keyboard-shortcut first-keystroke="alt button1" keymap="$default" />
       <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
     </action>
     <action id="OpenInMainView"
-            class="ru.list.OpenInMainWindowAction"
+            class="ru.list.navigator.OpenInMainGroupAction"
             text="Open in Main Window"
             description="Open File in Assistant View">
       <keyboard-shortcut first-keystroke="button1" keymap="$default" />
       <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
     </action>
 
+    <action id="ru.list.search.AssistantSearchEverywhereAction" class="ru.list.search.AssistantSearchEverywhereAction"
+            text="AssistantSearchEverywhereAction"
+            description="Simple Search Everywhere with Assistant opening file functions">
+      <keyboard-shortcut keymap="$default" first-keystroke="meta N"/>
+    </action>
   </actions>
 
 </idea-plugin>

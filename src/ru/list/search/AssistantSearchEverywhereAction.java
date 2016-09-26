@@ -69,7 +69,9 @@ import com.intellij.openapi.editor.actions.TextComponentEditorAction;
 import com.intellij.openapi.fileEditor.FileEditor;
 import com.intellij.openapi.fileEditor.FileEditorManager;
 import com.intellij.openapi.fileEditor.OpenFileDescriptor;
+import com.intellij.openapi.fileEditor.ex.FileEditorManagerEx;
 import com.intellij.openapi.fileEditor.impl.EditorHistoryManager;
+import com.intellij.openapi.fileEditor.impl.EditorWindow;
 import com.intellij.openapi.keymap.KeymapManager;
 import com.intellij.openapi.keymap.KeymapUtil;
 import com.intellij.openapi.keymap.MacKeymapUtil;
@@ -124,6 +126,7 @@ import com.intellij.util.ui.UIUtil;
 import org.jetbrains.annotations.NonNls;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import ru.list.utils.AssistantUtils;
 
 import javax.accessibility.Accessible;
 import javax.accessibility.AccessibleContext;
@@ -207,6 +210,7 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
     private FileEditor myFileEditor;
     private PsiFile myFile;
     private HistoryItem myHistoryItem;
+    private EditorWindow myEditorWindow;
 
     @Override
     public JComponent createCustomComponent(Presentation presentation) {
@@ -298,7 +302,7 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
                     //noinspection SSBasedInspection
                     SwingUtilities.invokeLater(() -> {
                         myList.setSelectedIndex(i);
-                        doNavigate(i);
+                        doNavigate(i, false);
                     });
                 }
             }
@@ -461,7 +465,7 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
         return myPopupField;
     }
 
-    private void doNavigate(final int index) {
+    private void doNavigate(final int index, boolean isAssistant) {
         final DataManager dataManager = DataManager.getInstance();
         if (dataManager == null) return;
         final Project project = CommonDataKeys.PROJECT.getData(dataManager.getDataContext(getField().getTextEditor()));
@@ -518,7 +522,11 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
                 return;
             }
             else if (isVirtualFile(value)) {
-                onDone = () -> OpenSourceUtil.navigate(true, new OpenFileDescriptor(project, (VirtualFile)value));
+                onDone = () -> {
+                    FileEditorManagerEx fileEditorManager = FileEditorManagerEx.getInstanceEx(project);
+                    VirtualFile virtualFile = (VirtualFile) value;
+                    AssistantUtils.openFileInEditorGroup(!isAssistant, virtualFile, fileEditorManager, myEditorWindow);
+                };
                 return;
             }
             else if (isActionValue(value) || isSetting(value) || isRunConfiguration(value)) {
@@ -614,6 +622,7 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
             myEditor = e.getData(CommonDataKeys.EDITOR);
             myFileEditor = e.getData(PlatformDataKeys.FILE_EDITOR);
             myFile = e.getData(CommonDataKeys.PSI_FILE);
+            myEditorWindow = e.getData(EditorWindow.DATA_KEY);
         }
         if (e == null && myFocusOwner != null) {
             e = AnActionEvent.createFromAnAction(this, me, ActionPlaces.UNKNOWN, DataManager.getInstance().getDataContext(myFocusOwner));
@@ -929,10 +938,43 @@ public class AssistantSearchEverywhereAction extends AnAction implements CustomC
             public void actionPerformed(AnActionEvent e) {
                 final int index = myList.getSelectedIndex();
                 if (index != -1) {
-                    doNavigate(index);
+                    doNavigate(index, false);
                 }
             }
         }.registerCustomShortcutSet(CustomShortcutSet.fromString("ENTER", "shift ENTER"), editor, balloon);
+        new DumbAwareAction(){
+            @Override
+            public void actionPerformed(AnActionEvent e) {
+                final PropertiesComponent storage = PropertiesComponent.getInstance(e.getProject());
+                final String[] values = storage.getValues(SE_HISTORY_KEY);
+                if (values != null) {
+                    if (values.length > myHistoryIndex) {
+                        final List<String> data = StringUtil.split(values[myHistoryIndex], "\t");
+                        myHistoryItem = new HistoryItem(data.get(0), data.get(1), data.get(2));
+                        myHistoryIndex++;
+                        editor.setText(myHistoryItem.pattern);
+                        editor.setCaretPosition(myHistoryItem.pattern.length());
+                        editor.moveCaretPosition(0);
+                    }
+                }
+            }
+
+            @Override
+            public void update(AnActionEvent e) {
+                e.getPresentation().setEnabled(editor.getCaretPosition() == 0);
+            }
+        }.registerCustomShortcutSet(CustomShortcutSet.fromString("LEFT"), editor, balloon);
+
+        CustomShortcutSet assistantShortcutSet = new CustomShortcutSet(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, InputEvent.ALT_DOWN_MASK));
+        new DumbAwareAction(){
+            @Override
+            public void actionPerformed(AnActionEvent e) {
+                final int index = myList.getSelectedIndex();
+                if (index != -1) {
+                    doNavigate(index, true);
+                }
+            }
+        }.registerCustomShortcutSet(assistantShortcutSet, editor, balloon);
         new DumbAwareAction(){
             @Override
             public void actionPerformed(AnActionEvent e) {

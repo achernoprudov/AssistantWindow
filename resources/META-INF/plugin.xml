@@ -1,19 +1,21 @@
 <idea-plugin version="2">
-  <id>ru.little.stars.idea.AssistantViewer</id>
-  <name>IDEA Assistant Viewer</name>
-  <version>1.02</version>
+  <id>ru.little.stars.idea.AssistantWindow</id>
+  <name>IDEA Assistant Window</name>
+  <version>1.03</version>
   <vendor email="dinloq@gmail.com">Little Stars</vendor>
 
-  <description><![CDATA[
-      Enter short description for your plugin here.<br>
-      <em>most HTML tags may be used</em>
-    ]]></description>
-
-  <change-notes><![CDATA[
-      Add change notes here.<br>
-      <em>most HTML tags may be used</em>
-    ]]>
-  </change-notes>
+  <description>
+    Plugin allow you to open files like XCode.
+    Sometimes its very useful to open different files in one window with splitter.
+    With this plugin your could easily do this!
+    Plugin add to context menu two actions:
+    Open in Main Window - opens file in main(first group) window.
+    Open in Assistant Window - opens file in assistant(second group) window. File Editor will splitted if it is not.
+    You could use this function in Assistant Search Everywhere too!
+    Assistant Search Everywhere is very similar(copied) to Search Everywhere. The only difference is that Assistant
+    Search Everywhere could be opened in Main Window(if you just hit Enter or click on element) or in Assistant
+    Window and slit window if it is necessary.
+  </description>
 
   <!-- please see http://www.jetbrains.org/intellij/sdk/docs/basics/getting_started/build_number_ranges.html for description -->
   <idea-version since-build="141.0"/>
@@ -36,18 +38,20 @@
       <keyboard-shortcut first-keystroke="alt button1" keymap="$default" />
       <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
     </action>
+
     <action id="OpenInMainView"
             class="ru.list.navigator.OpenInMainGroupAction"
             text="Open in Main Window"
-            description="Open File in Assistant View">
+            description="Open File in Main Window">
       <keyboard-shortcut first-keystroke="button1" keymap="$default" />
       <add-to-group group-id="ProjectViewPopupMenu" anchor="first"/>
     </action>
 
     <action id="ru.list.search.AssistantSearchEverywhereAction" class="ru.list.search.AssistantSearchEverywhereAction"
-            text="AssistantSearchEverywhereAction"
-            description="Simple Search Everywhere with Assistant opening file functions">
-      <keyboard-shortcut keymap="$default" first-keystroke="meta N"/>
+            text="Assistant Search Everywhere" description="Search Everywhere with AssistantView opening functions. For
+            example you could hit Enter to open file in main(first) window or hit Alt Enter to open in assistant(second
+            group) window.">
+      <keyboard-shortcut keymap="$default" first-keystroke="ctrl F"/>
     </action>
   </actions>
 

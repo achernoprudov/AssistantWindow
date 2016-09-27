@@ -52,6 +52,7 @@
             example you could hit Enter to open file in main(first) window or hit Alt Enter to open in assistant(second
             group) window.">
       <keyboard-shortcut keymap="$default" first-keystroke="ctrl F"/>
+      <add-to-group group-id="GoToTargetEx" anchor="last"/>
     </action>
   </actions>
 
